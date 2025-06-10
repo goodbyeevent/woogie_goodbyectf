@@ -44,9 +44,11 @@
         note.innerHTML = `
           <div class="note-content" style="background:${color}">
             <strong>${data.name}</strong><br><br>
-            <span id="msg-${id}">${data.msg}</span><br>
-            <button class="edit-btn" onclick="editMessage('${id}', '${data.name}')">✏ 수정</button>
-            <button class="delete-btn" onclick="requestDelete('${id}')">🗑 삭제</button>
+            <span id="msg-${id}">${data.msg}</span>
+            <div class="btn-group">
+              <button class="edit-btn" onclick="editMessage('${id}', '${data.name}')">✏ 수정</button>
+              <button class="delete-btn" onclick="requestDelete('${id}')">🗑 삭제</button>
+            </div>
           </div>
         `;
         list.appendChild(note);
@@ -140,6 +142,12 @@
       min-width: 200px;
       max-width: 350px;
     }
+    .btn-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 10px;
+    }
     .form-area {
       clear: both;
       margin-top: 40px;
@@ -175,7 +183,6 @@
       border: none;
       color: #555;
       cursor: pointer;
-      margin-right: 5px;
     }
     .delete-btn:hover {
       color: red;
