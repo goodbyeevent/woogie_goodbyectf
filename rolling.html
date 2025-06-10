@@ -19,20 +19,23 @@
       justify-content: center;
     }
     .postit {
-      width: 220px;
-      min-height: 200px;
-      max-width: 300px;
-      background: #fff176;
-      box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+      display: inline-block;
       margin: 10px;
-      padding: 10px;
-      white-space: pre-wrap;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      padding: 0;
+      background: transparent;
       border-radius: 8px;
+    }
+    .note-content {
+      background: #fff176;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+      white-space: pre-wrap;
       word-break: break-word;
+      transform: rotate(var(--angle));
       transition: all 0.2s ease-in-out;
+      min-width: 200px;
+      max-width: 350px;
     }
     .form-area {
       clear: both;
@@ -55,7 +58,9 @@
       margin-top: 10px;
     }
     .photo {
-      width: 220px;
+      width: 320px;
+      height: 265px; 
+      object-fit: cover; 
       margin: 20px auto;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
       border-radius: 8px;
@@ -67,7 +72,7 @@
       border: none;
       color: red;
       cursor: pointer;
-      margin-top: 5px;
+      margin-top: 8px;
     }
   </style>
 </head>
@@ -88,7 +93,11 @@
   <script>
     const ADMIN_PASSWORD = "woogie2025";
     const colors = ['#fff176', '#aed581', '#81d4fa', '#f48fb1', '#ffd180'];
-    const images = ['woogie1.jpg', 'woogie2.jpg', 'woogie3.jpg', 'woogie4.jpg', 'woogie5.jpg', 'woogie6.jpg', 'woogie7.jpg', 'woogie8.jpg', 'woogie9.jpg'];
+    const images = [
+      'woogie1.jpg', 'woogie3.jpg',
+      'woogie4.jpg', 'woogie5.jpg', 'woogie6.jpg',
+      'woogie7.jpg', 'woogie8.jpg', 'woogie9.jpg'
+    ];
 
     let data = JSON.parse(localStorage.getItem('rolling') || '[]');
 
@@ -99,18 +108,21 @@
       data.forEach((item, i) => {
         const note = document.createElement('div');
         note.className = 'postit';
-        note.style.background = colors[i % colors.length];
-        const angle = (Math.random() * 10 - 5).toFixed(2);
-        note.style.transform = `rotate(${angle}deg)`;
+        note.style.setProperty('--angle', `${(Math.random() * 10 - 5).toFixed(2)}deg`);
+
+        const color = colors[i % colors.length];
+
         note.innerHTML = `
-          <strong>${item.name}</strong><br><br>${item.msg}
-          <button class="delete-btn" onclick="requestDelete(${item.id})">🗑 삭제</button>
+          <div class="note-content" style="background:${color}">
+            <strong>${item.name}</strong><br><br>${item.msg}
+            <button class="delete-btn" onclick="requestDelete(${item.id})">🗑 삭제</button>
+          </div>
         `;
         list.appendChild(note);
 
         if ((i + 1) % 4 === 0 && images.length > 0) {
           const img = document.createElement('img');
-          img.src = images[Math.floor(i / 4) % images.length];
+          img.src = images[(i / 4) % images.length | 0];
           img.className = 'photo';
           list.appendChild(img);
         }
