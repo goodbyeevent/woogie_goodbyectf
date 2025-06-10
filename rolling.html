@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <title>To.Woogie</title>
   <script type="module">
-    // Firebase SDK import
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCEVX6tl2YztBnqTAB1niW8CjejaCw1JaE",
@@ -44,7 +43,9 @@
 
         note.innerHTML = `
           <div class="note-content" style="background:${color}">
-            <strong>${data.name}</strong><br><br>${data.msg}
+            <strong>${data.name}</strong><br><br>
+            <span id="msg-${id}">${data.msg}</span><br>
+            <button class="edit-btn" onclick="editMessage('${id}', '${data.name}')">✏ 수정</button>
             <button class="delete-btn" onclick="requestDelete('${id}')">🗑 삭제</button>
           </div>
         `;
@@ -63,11 +64,13 @@
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const msg = document.getElementById('msg').value.trim();
-      if (!name || !msg) return;
+      const pw = document.getElementById('pw').value.trim();
+      if (!name || !msg || !pw) return;
 
       await addDoc(collection(db, "messages"), {
         name,
         msg,
+        password: pw,
         timestamp: new Date()
       });
 
@@ -82,6 +85,22 @@
         render();
       } else {
         alert("❌ 암호가 틀렸습니다!");
+      }
+    };
+
+    window.editMessage = async function (id, name) {
+      const pw = prompt(`"${name}"님의 비밀번호를 입력하세요:`);
+      const snapshot = await getDocs(query(collection(db, "messages")));
+      const docData = snapshot.docs.find(d => d.id === id)?.data();
+
+      if (docData && docData.password === pw) {
+        const newMsg = prompt("새로운 메시지를 입력해주세요:", docData.msg);
+        if (newMsg !== null) {
+          await updateDoc(doc(db, "messages", id), { msg: newMsg });
+          render();
+        }
+      } else {
+        alert("❌ 비밀번호가 일치하지 않습니다.");
       }
     };
 
@@ -150,13 +169,19 @@
       border-radius: 8px;
       display: block;
     }
-    .delete-btn {
+    .delete-btn, .edit-btn {
       font-size: 12px;
       background: transparent;
       border: none;
-      color: red;
+      color: #555;
       cursor: pointer;
-      margin-top: 8px;
+      margin-right: 5px;
+    }
+    .delete-btn:hover {
+      color: red;
+    }
+    .edit-btn:hover {
+      color: blue;
     }
   </style>
 </head>
@@ -170,6 +195,7 @@
     <form onsubmit="save(event)">
       <input id="name" placeholder="작성자" required><br>
       <textarea id="msg" placeholder="메시지를 남겨주세요" required></textarea><br>
+      <input id="pw" type="password" placeholder="수정을 위한 비밀번호" required><br>
       <button type="submit">등록</button>
     </form>
   </div>
