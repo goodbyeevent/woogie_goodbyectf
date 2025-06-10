@@ -19,7 +19,10 @@
       justify-content: center;
     }
     .postit {
-      width: 200px; height: 200px;
+      width: 220px;
+      min-height: 200px;
+      max-width: 300px;
+      background: #fff176;
       box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
       margin: 10px;
       padding: 10px;
@@ -28,6 +31,8 @@
       flex-direction: column;
       justify-content: space-between;
       border-radius: 8px;
+      word-break: break-word;
+      transition: all 0.2s ease-in-out;
     }
     .form-area {
       clear: both;
@@ -83,7 +88,7 @@
   <script>
     const ADMIN_PASSWORD = "woogie2025";
     const colors = ['#fff176', '#aed581', '#81d4fa', '#f48fb1', '#ffd180'];
-    const images = ['woogie1.jpg', 'woogie2.jpg', 'woogie3.jpg'];
+    const images = ['woogie1.jpg', 'woogie2.jpg', 'woogie3.jpg', 'woogie4.jpg', 'woogie5.jpg'];
 
     let data = JSON.parse(localStorage.getItem('rolling') || '[]');
 
@@ -127,7 +132,7 @@
       e.preventDefault();
       const name = document.getElementById('name').value;
       const msg = document.getElementById('msg').value;
-      const id = Date.now(); // 고유 ID
+      const id = Date.now();
       data.push({ id, name, msg });
       localStorage.setItem('rolling', JSON.stringify(data));
       e.target.reset();
