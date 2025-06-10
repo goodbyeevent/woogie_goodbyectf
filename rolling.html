@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>To.Woogie</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+    h2, h3 {
+      text-align: center;
+      color: #444;
+    }
+    #list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .postit {
+      width: 200px; height: 200px;
+      box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+      margin: 10px;
+      padding: 10px;
+      white-space: pre-wrap;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-radius: 8px;
+    }
+    .form-area {
+      clear: both;
+      margin-top: 40px;
+      text-align: center;
+    }
+    input, textarea {
+      padding: 10px;
+      margin: 5px;
+      width: 300px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      background: #ffdf00;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .photo {
+      width: 220px;
+      margin: 20px auto;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+      border-radius: 8px;
+      display: block;
+    }
+    .delete-btn {
+      font-size: 12px;
+      background: transparent;
+      border: none;
+      color: red;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <img src="logo.png" alt="카카오뱅크 로고" style="height:40px; display:block; margin: 0 auto 20px;">
+  <h2>🎉 김태"우기"의 카카오뱅크 마지막 로그아웃 🎉</h2>
+  <h3>💌 정보보호실 크루들의 롤링페이퍼 💌</h3>
+  <div id="list"></div>
+
+  <div class="form-area">
+    <form onsubmit="save(event)">
+      <input id="name" placeholder="작성자" required><br>
+      <textarea id="msg" placeholder="메시지를 남겨주세요" required></textarea><br>
+      <button type="submit">등록</button>
+    </form>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "woogie2025";
+    const colors = ['#fff176', '#aed581', '#81d4fa', '#f48fb1', '#ffd180'];
+    const images = ['woogie1.jpg', 'woogie2.jpg', 'woogie3.jpg'];
+
+    let data = JSON.parse(localStorage.getItem('rolling') || '[]');
+
+    function render() {
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+
+      data.forEach((item, i) => {
+        const note = document.createElement('div');
+        note.className = 'postit';
+        note.style.background = colors[i % colors.length];
+        const angle = (Math.random() * 10 - 5).toFixed(2);
+        note.style.transform = `rotate(${angle}deg)`;
+        note.innerHTML = `
+          <strong>${item.name}</strong><br><br>${item.msg}
+          <button class="delete-btn" onclick="requestDelete(${item.id})">🗑 삭제</button>
+        `;
+        list.appendChild(note);
+
+        if ((i + 1) % 4 === 0 && images.length > 0) {
+          const img = document.createElement('img');
+          img.src = images[Math.floor(i / 4) % images.length];
+          img.className = 'photo';
+          list.appendChild(img);
+        }
+      });
+    }
+
+    function requestDelete(id) {
+      const input = prompt("관리자 암호를 입력하세요:");
+      if (input === ADMIN_PASSWORD) {
+        data = data.filter(item => item.id !== id);
+        localStorage.setItem('rolling', JSON.stringify(data));
+        render();
+      } else {
+        alert("❌ 암호가 틀렸습니다!");
+      }
+    }
+
+    function save(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const msg = document.getElementById('msg').value;
+      const id = Date.now(); // 고유 ID
+      data.push({ id, name, msg });
+      localStorage.setItem('rolling', JSON.stringify(data));
+      e.target.reset();
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
