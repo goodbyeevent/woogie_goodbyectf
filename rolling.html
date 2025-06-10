@@ -3,6 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <title>To.Woogie</title>
+  <script type="module">
+    // Firebase SDK import
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCEVX6tl2YztBnqTAB1niW8CjejaCw1JaE",
+      authDomain: "woogie-rollingpaper.firebaseapp.com",
+      projectId: "woogie-rollingpaper",
+      storageBucket: "woogie-rollingpaper.firebasestorage.app",
+      messagingSenderId: "445715305722",
+      appId: "1:445715305722:web:6efd0558fb979c0fe1e543",
+      measurementId: "G-0Z25DGQJCD"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const ADMIN_PASSWORD = "woogie2025";
+    const colors = ['#fff176', '#aed581', '#81d4fa', '#f48fb1', '#ffd180'];
+    const images = ['woogie1.jpg', 'woogie3.jpg', 'woogie4.jpg', 'woogie5.jpg', 'woogie6.jpg', 'woogie7.jpg', 'woogie8.jpg', 'woogie9.jpg'];
+
+    const list = document.getElementById("list");
+
+    async function render() {
+      list.innerHTML = "";
+      const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
+      const snapshot = await getDocs(q);
+      const docs = snapshot.docs;
+
+      for (let i = 0; i < docs.length; i++) {
+        const data = docs[i].data();
+        const id = docs[i].id;
+
+        const note = document.createElement('div');
+        note.className = 'postit';
+        note.style.setProperty('--angle', `${(Math.random() * 10 - 5).toFixed(2)}deg`);
+        const color = colors[i % colors.length];
+
+        note.innerHTML = `
+          <div class="note-content" style="background:${color}">
+            <strong>${data.name}</strong><br><br>${data.msg}
+            <button class="delete-btn" onclick="requestDelete('${id}')">🗑 삭제</button>
+          </div>
+        `;
+        list.appendChild(note);
+
+        if ((i + 1) % 4 === 0 && images.length > 0) {
+          const img = document.createElement('img');
+          img.src = images[Math.floor(i / 4) % images.length];
+          img.className = 'photo';
+          list.appendChild(img);
+        }
+      }
+    }
+
+    window.save = async function (e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const msg = document.getElementById('msg').value.trim();
+      if (!name || !msg) return;
+
+      await addDoc(collection(db, "messages"), {
+        name,
+        msg,
+        timestamp: new Date()
+      });
+
+      e.target.reset();
+      render();
+    };
+
+    window.requestDelete = async function (id) {
+      const input = prompt("관리자 암호를 입력하세요:");
+      if (input === ADMIN_PASSWORD) {
+        await deleteDoc(doc(db, "messages", id));
+        render();
+      } else {
+        alert("❌ 암호가 틀렸습니다!");
+      }
+    };
+
+    render();
+  </script>
+
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -26,7 +111,6 @@
       border-radius: 8px;
     }
     .note-content {
-      background: #fff176;
       padding: 12px;
       border-radius: 8px;
       box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
@@ -58,9 +142,9 @@
       margin-top: 10px;
     }
     .photo {
-      width: 400px;
-      height: 265px; 
-      object-fit: cover; 
+      width: 4100px;
+      height: 165px;
+      object-fit: cover;
       margin: 20px auto;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
       border-radius: 8px;
@@ -89,69 +173,5 @@
       <button type="submit">등록</button>
     </form>
   </div>
-
-  <script>
-    const ADMIN_PASSWORD = "woogie2025";
-    const colors = ['#fff176', '#aed581', '#81d4fa', '#f48fb1', '#ffd180'];
-    const images = [
-      'woogie5.jpg', 'woogie3.jpg',
-      'woogie8.jpg', 'woogie4.jpg', 'woogie6.jpg',
-      'woogie7.jpg', 'woogie1.jpg', 'woogie9.jpg'
-    ];
-
-    let data = JSON.parse(localStorage.getItem('rolling') || '[]');
-
-    function render() {
-      const list = document.getElementById('list');
-      list.innerHTML = '';
-
-      data.forEach((item, i) => {
-        const note = document.createElement('div');
-        note.className = 'postit';
-        note.style.setProperty('--angle', `${(Math.random() * 10 - 5).toFixed(2)}deg`);
-
-        const color = colors[i % colors.length];
-
-        note.innerHTML = `
-          <div class="note-content" style="background:${color}">
-            <strong>${item.name}</strong><br><br>${item.msg}
-            <button class="delete-btn" onclick="requestDelete(${item.id})">🗑 삭제</button>
-          </div>
-        `;
-        list.appendChild(note);
-
-        if ((i + 1) % 4 === 0 && images.length > 0) {
-          const img = document.createElement('img');
-          img.src = images[(i / 4) % images.length | 0];
-          img.className = 'photo';
-          list.appendChild(img);
-        }
-      });
-    }
-
-    function requestDelete(id) {
-      const input = prompt("관리자 암호를 입력하세요:");
-      if (input === ADMIN_PASSWORD) {
-        data = data.filter(item => item.id !== id);
-        localStorage.setItem('rolling', JSON.stringify(data));
-        render();
-      } else {
-        alert("❌ 암호가 틀렸습니다!");
-      }
-    }
-
-    function save(e) {
-      e.preventDefault();
-      const name = document.getElementById('name').value;
-      const msg = document.getElementById('msg').value;
-      const id = Date.now();
-      data.push({ id, name, msg });
-      localStorage.setItem('rolling', JSON.stringify(data));
-      e.target.reset();
-      render();
-    }
-
-    render();
-  </script>
 </body>
 </html>
