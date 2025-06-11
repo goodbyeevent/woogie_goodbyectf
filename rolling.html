@@ -6,15 +6,15 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, getDocs,
-      deleteDoc, doc, query, updateDoc, orderBy
+      getFirestore, collection, addDoc, deleteDoc,
+      doc, updateDoc, onSnapshot, query, orderBy
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCEVX6tl2YztBnqTAB1niW8CjejaCw1JaE",
       authDomain: "woogie-rollingpaper.firebaseapp.com",
       projectId: "woogie-rollingpaper",
-      storageBucket: "woogie-rollingpaper.firebasestorage.app",
+      storageBucket: "woogie-rollingpaper.appspot.com",
       messagingSenderId: "445715305722",
       appId: "1:445715305722:web:6efd0558fb979c0fe1e543",
       measurementId: "G-0Z25DGQJCD"
@@ -29,15 +29,14 @@
 
     const list = document.getElementById("list");
 
-    async function render() {
+    function render(snapshot) {
       list.innerHTML = "";
-      const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
-      const snapshot = await getDocs(q);
+      const docs = snapshot.docs;
 
-      snapshot.forEach((docSnap, i) => {
+      docs.forEach((docSnap, i) => {
         const data = docSnap.data();
         const id = docSnap.id;
-        const color = colors[i % colors.length];
+        const color = colors[i % colors.length] || '#fff176';
 
         const note = document.createElement('div');
         note.className = 'postit';
@@ -64,6 +63,12 @@
       });
     }
 
+    // 실시간 반영
+    const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
+    onSnapshot(q, (snapshot) => {
+      render(snapshot);
+    });
+
     window.save = async function (e) {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
@@ -79,14 +84,12 @@
       });
 
       e.target.reset();
-      render();
     };
 
     window.requestDelete = async function (id) {
       const input = prompt("관리자 암호를 입력하세요:");
       if (input === ADMIN_PASSWORD) {
         await deleteDoc(doc(db, "messages", id));
-        render();
       } else {
         alert("❌ 암호가 틀렸습니다!");
       }
@@ -94,21 +97,21 @@
 
     window.editMessage = async function (id, name) {
       const pw = prompt(`"${name}"님의 비밀번호를 입력하세요:`);
-      const snapshot = await getDocs(query(collection(db, "messages")));
-      const docData = snapshot.docs.find(d => d.id === id)?.data();
+      const docRef = doc(db, "messages", id);
+      const res = await (await getDocs(q)).docs.find(d => d.id === id);
+      if (!res) return;
 
-      if (docData && docData.password === pw) {
-        const newMsg = prompt("새로운 메시지를 입력해주세요:", docData.msg);
-        if (newMsg !== null) {
-          await updateDoc(doc(db, "messages", id), { msg: newMsg });
-          render();
-        }
-      } else {
+      const data = res.data();
+      if (data.password !== pw) {
         alert("❌ 비밀번호가 일치하지 않습니다.");
+        return;
+      }
+
+      const newMsg = prompt("새로운 메시지를 입력해주세요:", data.msg);
+      if (newMsg !== null && newMsg.trim() !== "") {
+        await updateDoc(docRef, { msg: newMsg });
       }
     };
-
-    render();
   </script>
 
   <style>
@@ -172,7 +175,7 @@
     }
     .photo {
       width: 440px;
-      height: 280px;
+      height: 290px;
       object-fit: cover;
       margin: 20px auto;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
